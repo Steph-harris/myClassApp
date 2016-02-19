@@ -1,4 +1,9 @@
+body {
+  background-color: #ffebee;
+}
 h1{
   background-color: black;
   color: #D63939;
+  text-align: center;
+  padding: 2% 0;
 }

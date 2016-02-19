@@ -7,8 +7,14 @@ var Sequelize = require("sequelize");
 var sequelize = new Sequelize('my_class_db', 'root');
 //create new user in db
 // var User = sequelize.define('user', {
-//   firstname: Sequelize.STRING, 
-//   lastname: Sequelize.STRING,
+//   firstname: {
+//     type: Sequelize.STRING,
+//     allowNull: false
+//   },
+//   lastname: {
+//     type: Sequelize.STRING,
+//     allowNull: false
+//   },
 //   email: {
 //     type: Sequelize.STRING,
 //     unique: true,
@@ -17,7 +23,11 @@ var sequelize = new Sequelize('my_class_db', 'root');
 //   password: {
 //     type: Sequelize.STRING,
 //     allowNull: false
-//   }
+//   },
+//   status: {
+       // type: Sequelize.STRING,
+//     allowNull: false
+// }
 // });
 
 var app = express();
@@ -32,7 +42,7 @@ app.use(session({
   resave: false
 }));
 
-// parse application/x-www-form-urlencoded 
+// parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({
   extended: false
 }));
@@ -51,7 +61,7 @@ app.post("/register", function(req,res){
 app.get("/login", function(req, res){
   res.render("login");
 });
-
+//query the db to see if user is student or instructor and render correct page
 app.post("/login", function(req,res){
   res.render("students");
 });
