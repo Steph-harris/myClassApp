@@ -42,7 +42,19 @@ app.set("view engine", "handlebars");
 
 app.get("/", function(req, res){
   res.render("register");
-})
+});
+
+app.post("/register", function(req,res){
+  res.render("login");
+});
+
+app.get("/login", function(req, res){
+  res.render("login");
+});
+
+app.post("/login", function(req,res){
+  res.render("students");
+});
 
 app.listen(PORT, function(){
   console.log("listening on port %s", PORT);
