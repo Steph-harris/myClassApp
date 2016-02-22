@@ -3,6 +3,7 @@ var exphbs = require("express-handlebars");
 var bodyParser = require("body-parser");
 var session = require("express-session");
 var PORT = process.env.PORT || 8080;
+
 var Sequelize = require("sequelize");
 var sequelize = new Sequelize('my_class_db', 'root');
 // create new user in db
@@ -57,7 +58,7 @@ app.get("/", function(req, res){
 app.post("/register", function(req,res){
   User.create(req.body).then(function(result){
    if(result.dataValues.status === "student"){
-      res.render("students");
+      res.render("students", {result});
     } else {
       res.render("instructors");
     }
@@ -65,7 +66,6 @@ app.post("/register", function(req,res){
     console.log(err);
     res.redirect('/?msg=' + err.errors[0].message);
   });
-  // res.render("login");
 });
 
 app.get("/login", function(req, res){
@@ -73,7 +73,13 @@ app.get("/login", function(req, res){
 });
 //query the db to see if user is student or instructor and render correct page
 app.post("/login", function(req,res){
-  res.render("students");
+  User.findOne({ where: {email: req.body.email} }).then(function(result){
+    if(result.password === req.body.password){
+      res.send("You're In");
+    } else {
+      res.send("no match found");
+    }
+  });
 });
 
 sequelize.sync().then(function() {
