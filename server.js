@@ -5,30 +5,30 @@ var session = require("express-session");
 var PORT = process.env.PORT || 8080;
 var Sequelize = require("sequelize");
 var sequelize = new Sequelize('my_class_db', 'root');
-//create new user in db
-// var User = sequelize.define('user', {
-//   firstname: {
-//     type: Sequelize.STRING,
-//     allowNull: false
-//   },
-//   lastname: {
-//     type: Sequelize.STRING,
-//     allowNull: false
-//   },
-//   email: {
-//     type: Sequelize.STRING,
-//     unique: true,
-//     allowNull: false
-//   },
-//   password: {
-//     type: Sequelize.STRING,
-//     allowNull: false
-//   },
-//   status: {
-       // type: Sequelize.STRING,
-//     allowNull: false
-// }
-// });
+// create new user in db
+var User = sequelize.define('user', {
+  firstname: {
+    type: Sequelize.STRING,
+    allowNull: false
+  },
+  lastname: {
+    type: Sequelize.STRING,
+    allowNull: false
+  },
+  email: {
+    type: Sequelize.STRING,
+    unique: true,
+    allowNull: false
+  },
+  password: {
+    type: Sequelize.STRING,
+    allowNull: false
+  },
+  status: {
+       type: Sequelize.STRING,
+    allowNull: false
+}
+});
 
 var app = express();
 //get css,js, or images from files in public folder
@@ -51,12 +51,21 @@ app.engine("handlebars", exphbs({defaultLayout: "main"}));
 app.set("view engine", "handlebars");
 
 app.get("/", function(req, res){
-  res.render("register");
+  res.render("register", { msg: req.query.msg});
 });
 
 app.post("/register", function(req,res){
-  console.log(req.body);
-  res.render("login");
+  User.create(req.body).then(function(result){
+   if(result.dataValues.status === "student"){
+      res.render("students");
+    } else {
+      res.render("instructors");
+    }
+  }).catch(function(err) {
+    console.log(err);
+    res.redirect('/?msg=' + err.errors[0].message);
+  });
+  // res.render("login");
 });
 
 app.get("/login", function(req, res){
@@ -67,6 +76,8 @@ app.post("/login", function(req,res){
   res.render("students");
 });
 
-app.listen(PORT, function(){
-  console.log("listening on port %s", PORT);
+sequelize.sync().then(function() {
+  app.listen(PORT, function(){
+    console.log("listening on port %s", PORT);
+  });
 });
