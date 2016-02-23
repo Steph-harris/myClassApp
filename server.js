@@ -10,6 +10,7 @@ var sequelize = new Sequelize('my_class_db', 'root');
 
 var passport = require('passport');
 var passportLocal = require('passport-local');
+
 // create new user in db
 var Instructor = sequelize.define('instructor', {
   firstname: {
@@ -87,6 +88,38 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
+//Student authentication
+passport.use(new passportLocal.Strategy(
+  function(email, password, done) {
+    //Check password in DB
+    Student.findOne({
+      where:{
+        email: email
+      }
+    }).then(function(user){
+      //check password against hash
+      if(user){
+        bcrypt.compare(password, user.dataValues.password, function(err, user){
+          if(user){
+            //if password is correct authenticate the user with cookie
+            done(null, {id: email, email:email});
+          }else{
+            done(null,null);
+          }
+        });
+      }else {
+        done(null, null);
+      }
+    });
+  }));
+
+passport.serializeUser(function(user, done) {
+  done(null, user.id);
+});
+passport.deserializeUser(function(id, done) {
+  done(null, { id: id, username: id })
+});
+
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({
   extended: false
@@ -124,15 +157,35 @@ app.get("/login", function(req, res){
   res.render("login");
 });
 
+app.get("/students", function(req, res){
+  res.render("students");
+});
+
+app.get("/instructors", function(req, res){
+  res.render("students");
+});
+
 //query the db to see if user is student or instructor and render correct page
 app.post("/login", function(req,res){
-  User.findOne({ where: {email: req.body.email} }).then(function(result){
-    if(result.password === req.body.password){
-      res.send("You're In");
-    } else {
-      res.send("no match found");
-    }
-  });
+  if(req.body.status === "student"){
+    passport.authenticate('local', {
+      successRedirect: "/students",
+      failureRedirect: "/login"
+    });
+  }
+  // else {
+  //   passport.authenticate('instructor', {
+  //     successRedirect: "/instructors",
+  //     failureRedirect: "/login"
+  //   });
+  // };
+  // User.findOne({ where: {email: req.body.email} }).then(function(result){
+  //   if(result.password === req.body.password){
+  //     res.send("You're In");
+  //   } else {
+  //     res.send("no match found");
+  //   }
+  // });
 });
 
 sequelize.sync().then(function() {
