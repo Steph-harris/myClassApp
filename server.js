@@ -65,6 +65,7 @@ var Student = sequelize.define('student', {
     allowNull: false
   }
 }, {
+  //create password hash
   hooks: {
     beforeCreate: function(input){
       input.password = bcrypt.hashSync(input.password, 10);
@@ -89,10 +90,34 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 //Student authentication
-passport.use(new passportLocal.Strategy(
+passport.use("student", new passportLocal.Strategy(
   function(email, password, done) {
     //Check password in DB
     Student.findOne({
+      where:{
+        email: email
+      }
+    }).then(function(user){
+      //check password against hash
+      if(user){
+        bcrypt.compare(password, user.dataValues.password, function(err, user){
+          if(user){
+            //if password is correct authenticate the user with cookie
+            done(null, {id: email, email:email});
+          }else{
+            done(null,null);
+          }
+        });
+      }else {
+        done(null, null);
+      }
+    });
+  }));
+//Instructor auth
+passport.use("instructor", new passportLocal.Strategy(
+  function(email, password, done) {
+    //Check password in DB
+    Instructor.findOne({
       where:{
         email: email
       }
@@ -133,7 +158,6 @@ app.get("/", function(req, res){
 });
 
 app.post("/register", function(req,res){
-  //create password hash
   // })
   //place new user in either student or instructor table
   if(req.body.status === "student"){
@@ -168,17 +192,17 @@ app.get("/instructors", function(req, res){
 //query the db to see if user is student or instructor and render correct page
 app.post("/login", function(req,res){
   if(req.body.status === "student"){
-    passport.authenticate('local', {
+    debugger
+    passport.authenticate('student', {
       successRedirect: "/students",
       failureRedirect: "/login"
     });
-  }
-  // else {
-  //   passport.authenticate('instructor', {
-  //     successRedirect: "/instructors",
-  //     failureRedirect: "/login"
-  //   });
-  // };
+  } else {
+    passport.authenticate('instructor', {
+      successRedirect: "/instructors",
+      failureRedirect: "/login"
+    });
+  };
   // User.findOne({ where: {email: req.body.email} }).then(function(result){
   //   if(result.password === req.body.password){
   //     res.send("You're In");
