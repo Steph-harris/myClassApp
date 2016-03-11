@@ -189,7 +189,17 @@ app.get("/students", function(req, res){
 });
 
 app.get("/instructors", function(req, res){
-  res.render("students");
+  debugger;
+  Instructor.findAll({
+    include: [{
+      model: Student
+    }]
+  }).then(function(instructors){
+    console.log(instructors);
+    res.render("instructors",{
+      instructors:instructors
+    })
+  });
 });
 
 //query the db to see if user is student or instructor and render correct page
