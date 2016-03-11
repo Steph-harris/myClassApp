@@ -21,7 +21,7 @@ var Instructor = sequelize.define('instructor', {
     type: Sequelize.STRING,
     allowNull: false
   },
-  email: {
+  username: {
     type: Sequelize.STRING,
     unique: true,
     allowNull: false
@@ -51,7 +51,7 @@ var Student = sequelize.define('student', {
     type: Sequelize.STRING,
     allowNull: false
   },
-  email: {
+  username: {
     type: Sequelize.STRING,
     unique: true,
     allowNull: false
@@ -91,11 +91,11 @@ app.use(passport.session());
 
 //Student authentication
 passport.use("student", new passportLocal.Strategy(
-  function(email, password, done) {
+  function(username, password, done) {
     //Check password in DB
     Student.findOne({
       where:{
-        email: email
+        username: username
       }
     }).then(function(user){
       //check password against hash
@@ -103,7 +103,7 @@ passport.use("student", new passportLocal.Strategy(
         bcrypt.compare(password, user.dataValues.password, function(err, user){
           if(user){
             //if password is correct authenticate the user with cookie
-            done(null, {id: email, email:email});
+            done(null, {id: username, username:username});
           }else{
             done(null,null);
           }
@@ -115,11 +115,12 @@ passport.use("student", new passportLocal.Strategy(
   }));
 //Instructor auth
 passport.use("instructor", new passportLocal.Strategy(
-  function(email, password, done) {
+  function(username, password, done) {
+    debugger;
     //Check password in DB
     Instructor.findOne({
       where:{
-        email: email
+        username: username
       }
     }).then(function(user){
       //check password against hash
@@ -127,7 +128,7 @@ passport.use("instructor", new passportLocal.Strategy(
         bcrypt.compare(password, user.dataValues.password, function(err, user){
           if(user){
             //if password is correct authenticate the user with cookie
-            done(null, {id: email, email:email});
+            done(null, {id: username, username:username});
           }else{
             done(null,null);
           }
@@ -154,9 +155,11 @@ app.engine("handlebars", exphbs({defaultLayout: "main"}));
 app.set("view engine", "handlebars");
 
 app.get("/", function(req, res){
-  res.render("register", { msg: req.query.msg});
+  Instructor.findAll({}).then(function(instructor){
+    res.render("register", {instructor});
+  });
 });
-
+// { msg: req.query.msg}
 app.post("/register", function(req,res){
   // })
   //place new user in either student or instructor table
@@ -203,7 +206,7 @@ app.post("/login", function(req,res){
       failureRedirect: "/login"
     });
   };
-  // User.findOne({ where: {email: req.body.email} }).then(function(result){
+  // User.findOne({ where: {username: req.body.username} }).then(function(result){
   //   if(result.password === req.body.password){
   //     res.send("You're In");
   //   } else {
